@@ -1,0 +1,5 @@
+options:
+  total_memory:
+    name: Total Host Memory
+    notes: The amount of memory (in MB) that is available on this host.
+    default: 1024
