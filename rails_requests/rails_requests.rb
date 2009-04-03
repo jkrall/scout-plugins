@@ -36,11 +36,13 @@ class RailsRequests < Scout::Plugin
                else
                   @last_run || Time.now
                end
-
+    
+    date_format_regex = "\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\s+\w+\s+"
+  
     Elif.foreach(@options["log"]) do |line|
-      if line =~ /\ACompleted in (\d+)ms .+ \[(\S+)\]\Z/        # newer Rails
+      if line =~ /\A#{date_format_regex}Completed in (\d+)ms .+ \[(\S+)\]\Z/        # newer Rails
         last_completed = [$1.to_i / 1000.0, $2]
-      elsif line =~ /\ACompleted in (\d+\.\d+) .+ \[(\S+)\]\Z/  # older Rails
+      elsif line =~ /\A#{date_format_regex}Completed in (\d+\.\d+) .+ \[(\S+)\]\Z/  # older Rails
         last_completed = [$1.to_f, $2]
       elsif last_completed and
             line =~ /\AProcessing .+ at (\d+-\d+-\d+ \d+:\d+:\d+)\)/
