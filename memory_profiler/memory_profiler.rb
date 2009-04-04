@@ -1,7 +1,9 @@
 class MemoryProfiler < Scout::Plugin
   def run
     mem_total = @options['total_memory'].to_i
+    p mem_total
     mem_used = `ps -Ao rss`.split(/\n/)[1..-1].collect {|n| n.strip.to_i}.inject(0) {|c,i| c+i} / 1024
+    p mem_used
     mem_free = mem_total - mem_used
     mem_percent_used = (mem_used / mem_total.to_f * 100).to_i
 
