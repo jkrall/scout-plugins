@@ -34,8 +34,9 @@ class RailsRequests < Scout::Plugin
     last_run = if @options["last_run"] 
                   Time.parse(@options["last_run"])
                else
-                  @last_run || Time.now
+                  memory(:last_run) || Time.now
                end
+    remember(:last_run => Time.now)    
     
     date_format_regex = '\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\s+\w+\s+'
   
