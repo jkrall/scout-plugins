@@ -4,7 +4,8 @@ class RailsRequests < Scout::Plugin
   
   TEST_USAGE = "#{File.basename($0)} log LOG max_request_length MAX_REQUEST_LENGTH last_run LAST_RUN"
   
-  def run
+  def build_report
+
     begin
       require "elif"
     rescue LoadError
@@ -12,27 +13,26 @@ class RailsRequests < Scout::Plugin
         require "rubygems"
         require "elif"
       rescue LoadError
-        return { :error => { :subject => "Couldn't load Elif.",
-                             :body    => "The Elif library is required by " +
-                                         "this plugin." } }
+        return error(:subject => "Couldn't load Elif.",
+                     :body    => "The Elif library is required by " +
+                                 "this plugin." )
       end
     end
     
-    if @options["log"].strip.length == 0
-      return { :error => { :subject => "A path to the Rails log file wasn't provided." } }
+    if options(:log).strip.length == 0
+      return error(:subject => "A path to the Rails log file wasn't provided.")
     end
 
-    report = { :report => { :slow_request_count => 0,
-                            :request_count => 0,
-                            :average_request_length => nil},
-               :alerts => Array.new }
+    report_data = { :slow_request_count => 0,
+                :request_count => 0,
+                :average_request_length => nil }
     
     last_completed = nil
     slow_requests = ''
     total_request_time = 0.0
 
-    last_run = if @options["last_run"] 
-                  Time.parse(@options["last_run"])
+    last_run = if options(:last_run) 
+                  Time.parse(options(:last_run))
                else
                   memory(:last_run) || Time.now
                end
@@ -40,7 +40,7 @@ class RailsRequests < Scout::Plugin
     
     date_format_regex = '\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\s+\w+\s+'
   
-    Elif.foreach(@options["log"]) do |line|
+    Elif.foreach(options(:log)) do |line|
       if line =~ /\A#{date_format_regex}Completed in (\d+)ms .+ \[(\S+)\]\Z/        # newer Rails
         last_completed = [$1.to_i / 1000.0, $2]
       elsif line =~ /\A#{date_format_regex}Completed in (\d+\.\d+) .+ \[(\S+)\]\Z/  # older Rails
@@ -51,10 +51,10 @@ class RailsRequests < Scout::Plugin
         if time_of_request < last_run
           break
         else
-          report[:report][:request_count] += 1
+          report_data[:request_count] += 1
           total_request_time += last_completed.first.to_f
-          if @options["max_request_length"].to_f > 0 and last_completed.first.to_f > @options["max_request_length"].to_f
-            report[:report][:slow_request_count] += 1
+          if options(:max_request_length).to_f > 0 and last_completed.first.to_f > options(:max_request_length).to_f
+            report_data[:slow_request_count] += 1
             slow_requests += "#{last_completed.last}\n"
             slow_requests += "Time: " + last_completed.first.to_s + " sec" + "\n\n"
           end
@@ -63,23 +63,24 @@ class RailsRequests < Scout::Plugin
     end
     
     # Create a single alert that holds all of the requests that exceeded the +max_request_length+.
-    if report[:report] and (count = report[:report][:slow_request_count].to_i and count > 0)
-      report[:alerts] << {:subject => "Maximum Time(#{@options["max_request_length"].to_s} sec) exceeded on #{count} #{count > 1 ? 'requests' : 'request'}",
-                          :body => slow_requests}
+    if report_data[:slow_request_count].to_i > 0
+      count = report[:slow_request_count].to_i
+      alert(:subject => "Maximum Time(#{options(:max_request_length).to_s} sec) exceeded on #{count} #{count > 1 ? 'requests' : 'request'}",
+            :body => slow_requests)
     end
     # Calculate the average request time if there are any requests
-    if report[:report][:request_count] > 0
-      avg = total_request_time/report[:report][:request_count]
-      report[:report][:average_request_length] = sprintf("%.2f", avg)
+    if report_data[:request_count] > 0
+      avg = total_request_time/report_data[:request_count]
+      report_data[:average_request_length] = sprintf("%.2f", avg)
     end
-    report
+    report(report_data)
   rescue
     if $!.message == "undefined method `strip' for nil:NilClass"
-      { :error => {:subject => "Please provide the full path to the log file.",
-                   :body => "A full path to the Rails log file wasn't provided - you can specify the path in the plugin options."}}
+      error(:subject => "Please provide the full path to the log file.",
+             :body => "A full path to the Rails log file wasn't provided - you can specify the path in the plugin options.")
     else
-      { :error => { :subject => "Couldn't parse log file.",
-                  :body    => $!.message } }
+      error(:subject => "Couldn't parse log file.",
+              :body    => $!.message)
     end
   end
 end
