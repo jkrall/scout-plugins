@@ -19,7 +19,7 @@ class RailsRequests < Scout::Plugin
       end
     end
     
-    if options(:log).strip.length == 0
+    if option(:log).strip.length == 0
       return error(:subject => "A path to the Rails log file wasn't provided.")
     end
 
@@ -31,8 +31,8 @@ class RailsRequests < Scout::Plugin
     slow_requests = ''
     total_request_time = 0.0
 
-    last_run = if options(:last_run) 
-                  Time.parse(options(:last_run))
+    last_run = if option(:last_run) 
+                  Time.parse(option(:last_run))
                else
                   memory(:last_run) || Time.now
                end
@@ -40,7 +40,7 @@ class RailsRequests < Scout::Plugin
     
     date_format_regex = '\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\s+\w+\s+'
   
-    Elif.foreach(options(:log)) do |line|
+    Elif.foreach(option(:log)) do |line|
       if line =~ /\A#{date_format_regex}Completed in (\d+)ms .+ \[(\S+)\]\Z/        # newer Rails
         last_completed = [$1.to_i / 1000.0, $2]
       elsif line =~ /\A#{date_format_regex}Completed in (\d+\.\d+) .+ \[(\S+)\]\Z/  # older Rails
@@ -53,7 +53,7 @@ class RailsRequests < Scout::Plugin
         else
           report_data[:request_count] += 1
           total_request_time += last_completed.first.to_f
-          if options(:max_request_length).to_f > 0 and last_completed.first.to_f > options(:max_request_length).to_f
+          if option(:max_request_length).to_f > 0 and last_completed.first.to_f > option(:max_request_length).to_f
             report_data[:slow_request_count] += 1
             slow_requests += "#{last_completed.last}\n"
             slow_requests += "Time: " + last_completed.first.to_s + " sec" + "\n\n"
@@ -65,7 +65,7 @@ class RailsRequests < Scout::Plugin
     # Create a single alert that holds all of the requests that exceeded the +max_request_length+.
     if report_data[:slow_request_count].to_i > 0
       count = report[:slow_request_count].to_i
-      alert(:subject => "Maximum Time(#{options(:max_request_length).to_s} sec) exceeded on #{count} #{count > 1 ? 'requests' : 'request'}",
+      alert(:subject => "Maximum Time(#{option(:max_request_length).to_s} sec) exceeded on #{count} #{count > 1 ? 'requests' : 'request'}",
             :body => slow_requests)
     end
     # Calculate the average request time if there are any requests
@@ -77,7 +77,7 @@ class RailsRequests < Scout::Plugin
   rescue
     if $!.message == "undefined method `strip' for nil:NilClass"
       error(:subject => "Please provide the full path to the log file.",
-             :body => "A full path to the Rails log file wasn't provided - you can specify the path in the plugin options.")
+             :body => "A full path to the Rails log file wasn't provided - you can specify the path in the plugin option.")
     else
       error(:subject => "Couldn't parse log file.",
               :body    => $!.message)
