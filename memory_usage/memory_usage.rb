@@ -25,7 +25,7 @@ class MemoryUsage < Scout::Plugin
         if max > 0 and swap_used > max
           alert :subject=>"Maximum Swap Exceeded (#{swap_used})"
         end
-        max = @options["max_swap_ratio"].to_i
+        max = option(:max_swap_ratio).to_i
         if max > 0 and ratio > max
           alert :subject=>"Maximum Swap Ratio Exceeded (#{ratio})"
         end
