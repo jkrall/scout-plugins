@@ -1,0 +1,12 @@
+Rails Instrumentation Plugin
+======================
+Created by [Scout](http://scoutapp.com)
+
+This is a Scout Plugin that provides deep rails instrumentation. The Scout Agent (version 3.0) is required along with its companion Rails plugin.
+
+Compatibility 
+-------------
+
+Works on Linux and OSX.
+
+

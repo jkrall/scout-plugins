@@ -1,8 +1,18 @@
 options:
-  mysql_slow_log:
-    name: MySQL Slow Query Log Path
-    notes: The full path to the MySQL slow queries log file.
-  max_query_time:
-    name: Max Query Time (Seconds)
-    notes: If process memory is larger than this amount, an alert is generated.
-    default: 5
+  user:
+    name: MySQL username
+    notes: Specify the username to connect with
+    default: root
+  password:
+    name: MySQL password
+    notes: Specify the password to connect with
+  host:
+    name: MySQL host
+    notes: Specify something other than 'localhost' to connect via TCP
+    default: localhost
+  port:
+    name: MySQL port
+    notes: Specify the port to connect to MySQL with (if nonstandard)
+  socket:
+    name: MySQL socket
+    notes: Specify the location of the MySQL socket

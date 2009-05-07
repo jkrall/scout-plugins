@@ -3,11 +3,25 @@ options:
     name: Command Name
     notes: The name of the command to pull statistics for.
     default: mongrel_rails
-  max_memory_usage:
-    name: Max Memory Usage (MB)
-    notes: If process memory is larger than this amount, an alert is generated.
-    default: 10
   ps_command:
     name: The Process Status (ps) Command
     notes: The command with options. The default works on most systems.
     default: ps axucww
+    
+metadata:
+  memory:          
+    label: Memory Usage
+    units: MB
+    precision: 0
+    
+triggers:
+  - type: peak
+    data_series_name: memory
+    max_value: 10
+  - type: trend
+    data_series_name: memory
+    direction: UP
+    percentage_change: 20
+    duration: 60
+    window_reference: LAST_WEEK
+    min_value: 5

@@ -32,12 +32,24 @@ class DiskUsage < Scout::Plugin
     end
   end
   
-  def run
+  # Ensures disk space metrics are in GB. Metrics that don't contain 'G,M,or K' are just
+  # turned into integers.
+  def clean_value(value)
+    if value =~ /G/i
+      value.to_i
+    elsif value =~ /M/i
+      (value.to_f/1024.to_f).round
+    elsif value =~ /K/i
+      (value.to_f/1024.to_f/1024.to_f).round
+    else
+      value.to_i
+    end
+  end
+  
+  def build_report
     df_command   = @options["command"] || "df -h"
     df_output    = `#{df_command}`
-    
-    report       = {:report => Hash.new, :alerts => Array.new}
-        
+          
     df_lines = []
     parse_file_systems(df_output) { |row| df_lines << row }
     
@@ -54,20 +66,17 @@ class DiskUsage < Scout::Plugin
     # else just use the first line
     df_line ||= df_lines.first
       
-    df_line.each do |name, value|
-      report[:report][name.downcase.strip.to_sym] = value
-    end
-    
-    capacity = (report[:report][:capacity] || report[:report][:"use%"]).to_i
-    
-    max = @options["max_capacity"].to_i
-
-    if max > 0 and capacity > max
+    # remove 'filesystem' and 'mounted on' if present - these don't change. 
+    df_line.reject! { |name,value| ['filesystem','mounted on'].include?(name.downcase.gsub(/\n/,'')) }  
       
-      report[:alerts] << { :subject => "Maximum Capacity Exceeded " +
-                                       "(#{capacity}%)" }
+    # capacity on osx = Use% on Linux ... convert anything that isn't size, used, or avail to capacity ... a big assumption?
+    assumed_capacity = df_line.find { |name,value| !['size','used','avail'].include?(name.downcase.gsub(/\n/,''))}
+    df_line.delete(assumed_capacity.first)
+    df_line['capacity'] = assumed_capacity.last
+      
+    df_line.each do |name, value|
+      report(name.downcase.strip.to_sym => clean_value(value))
     end
-    report
   rescue
     { :error => { :subject => "Couldn't use `df` as expected.",
                   :body    => $!.message } }

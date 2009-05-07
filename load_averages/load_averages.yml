@@ -1,12 +1,19 @@
-options:
-  # specify each option here
-  max_load:
-    # anyway to make all of these specifications optional, and just allow 'max_load' ?
-    name: Max Load
-    notes: If the server load is larger than this amount, an alert is generated
-    default: 7
-# these options are for rendering the visual graph on the rails app ... 
-# these aren't in stone, still working on them
-visualization:
-  type: Line
-  series: last_minute
+metadata:
+  last_minute:
+    precision: 2
+  last_five_minutes:
+    precision: 2
+  last_fifteen_minutes:
+    precision: 2
+
+triggers:
+  - type: peak
+    data_series_name: last_minute
+    max_value: 3
+  - type: trend
+    data_series_name: last_minute
+    direction: UP
+    percentage_change: 60
+    duration: 60
+    window_reference: LAST_WEEK
+    min_value: 0.2

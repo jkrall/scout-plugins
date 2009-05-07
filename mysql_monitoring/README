@@ -1,0 +1,11 @@
+Provides a summary of MySQL query activity, alerting when the number of queries increases by 30% compared to the 7-day average.
+
+The following query statistics are recorded:
+
+* Rate  of SELECTs (queries/sec)
+* Rate of INSERTs
+* Rate of DELETEs
+* Rate of UPDATEs
+* Rate of REPLACEs
+* Rate of total queries
+

@@ -1,13 +1,11 @@
 class Uptime < Scout::Plugin
-  def run
-    data = {}
+  def build_report
     if `uptime` =~ /up +([^,]+)/
-      data[:report] = {:uptime => $1}
+      report :uptime => $1
     else
       raise "Unexpected output format"  
     end
-    data
-  rescue
-    {:error => {:subject => "Couldn't use `uptime` as expected.", :body => $!.message} }
+  rescue Exception
+    error "Couldn't use `uptime` as expected.", $!.message
   end
 end

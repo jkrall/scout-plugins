@@ -1,0 +1,97 @@
+schema:
+  # - throughput
+  - avg_request_time
+  - actions.num_requests
+  - actions.runtime_avg
+  - actions.runtime_max
+  - actions.render_runtime_avg
+  - actions.render_runtime_max
+  - actions.db_runtime_avg
+  - actions.db_runtime_max
+  - actions.other_runtime_avg
+  - actions.other_runtime_max
+
+# Valid keys in metadata
+# label -- defaults to a humanized version of key
+# units -- defaults to blank
+# precision -- defaults to 0
+# delimiter -- defaults to nothing as in 4096
+# larger_is_better -- you can set this true, otherwise smaller numbers are regarded as being better
+
+metadata:
+  # add back once rate_of_change type available
+  # throughput:
+  #   label: Throughput
+  #   units: req/sec
+  #   precision: 0
+  #   larger_is_better: true
+  avg_request_time:
+    label: Average Request Time
+    units: ms
+    precision: 0
+  actions.num_requests:
+    label: Max runtime
+    units: ms
+    precision: 0
+  actions.runtime_avg: 
+    label: Average Runtime
+    units: ms
+    precision: 0
+  actions.runtime_max: 
+    label: Max runtime
+    units: ms
+    precision: 0
+  actions.render_runtime_avg: 
+    label: Average render time
+    units: ms
+    precision: 0                                     
+  actions.render_runtime_max: 
+    label: Max render time
+    units: ms
+    precision: 0
+  actions.db_runtime_avg: 
+    label: Average database time
+    units: ms
+    precision: 0
+  actions.db_runtime_max: 
+    label: Max database time
+    units: ms
+    precision: 0
+  actions.other_runtime_avg: 
+    label: Average other time
+    units: ms
+    precision: 0
+  actions.other_runtime_max: 
+    label: Max other time
+    units: ms
+    precision: 0    
+    
+# Define your triggers here as an array of hashes. This example 
+# defines three triggers, one of each type:
+#
+#triggers:
+#  - type: peak
+#    data_series_name: throughput             # a shallow data series
+#    max_value: 200
+#  - type: plateau
+#    data_series_name: actions.runtime_max    # a deep data series
+#    max_value: 1000
+#    duration: 10                             # in minutes
+#  - type: trend
+#    data_series_name: actions.runtime_avg
+#    direction: UP                            # UP, DOWN, EITHER
+#    percentage_change: 10                    # greater than 0
+#    duration: 120                            # a number (in minutes) or: DAY_SO_FAR
+#    window_reference: PRECEDING_WINDOW       # PRECEEDING_WINDOW, YESTERDAY, LAST_WEEK
+
+triggers:
+  - type: peak
+    data_series_name: actions.runtime_max
+    max_value: 4000
+  - type: trend
+    data_series_name: actions.runtime_avg
+    direction: UP
+    percentage_change: 30
+    duration: 120
+    window_reference: LAST_WEEK
+    min_value: 100

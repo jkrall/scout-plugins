@@ -9,17 +9,16 @@ class PassengerMemoryStats < Scout::Plugin
         short_name = name.sub(/_total\z/, "")
         max        = option("max_#{short_name}").to_f
         next unless max.nonzero?
-        
         num        = total.to_f
         mem_name   = "#{name}_failure"
         human_name = short_name.capitalize.
                                 gsub(/_([a-z])/) { " #{$1.capitalize}"}.
                                 gsub("Vms", "VMS")
         if num > max and not memory(mem_name)
-          alert(:subject => "Maximum #{human_name} Exceeded (#{total})")
+          alert "Maximum #{human_name} Exceeded (#{total})", ''
           remember(mem_name => true)
         elsif num < max and memory(mem_name)
-          alert(:subject => "Maximum #{human_name} Has Dropped Below Limit (#{total})")
+          alert "Maximum #{human_name} Has Dropped Below Limit (#{total})", ''
           memory.delete(mem_name)
         else
           remember(mem_name => memory(mem_name))
@@ -29,9 +28,9 @@ class PassengerMemoryStats < Scout::Plugin
       error "Could not get data from command", "Error:  #{data}"
     end
   end
-  
+
   private
-  
+
   def parse_data(data)
     table        = nil
     headers      = nil
@@ -39,12 +38,16 @@ class PassengerMemoryStats < Scout::Plugin
     stats        = { "apache_processes"        => 0,
                      "apache_vmsize_total"     => 0.0,
                      "apache_private_total"    => 0.0,
+                     "nginx_processes"         => 0,
+                     "nginx_vmsize_total"      => 0.0,
+                     "nginx_private_total"     => 0.0,
                      "passenger_processes"     => 0,
                      "passenger_vmsize_total"  => 0.0,
                      "passenger_private_total" => 0.0 }
 
     data.each do |line|
-      if line =~ /^\s*-+\s+(Apache|Passenger)\s+processes/
+      line = line.gsub(/\e\[\d+m/,'')
+      if line =~ /^\s*-+\s+(Apache|Passenger|Nginx)\s+processes/
         table        = $1.downcase
         headers      = nil
         field_format = nil
