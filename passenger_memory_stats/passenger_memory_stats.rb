@@ -32,6 +32,9 @@ class PassengerMemoryStats < Scout::Plugin
   private
 
   def parse_data(data)
+    app_list = option("apps_to_track").split(/,/)
+    app_list.collect {|name| name.sub(/\//,'_') }
+
     table        = nil
     headers      = nil
     field_format = nil
@@ -44,6 +47,10 @@ class PassengerMemoryStats < Scout::Plugin
                      "passenger_processes"     => 0,
                      "passenger_vmsize_total"  => 0.0,
                      "passenger_private_total" => 0.0 }
+    app_list.each do |name|
+      stats["rails_#{name}_total"] = 0.0
+      stats["spawner_#{name}_total"] = 0.0
+    end
 
     data.each do |line|
       line = line.gsub(/\e\[\d+m/,'')
@@ -61,12 +68,20 @@ class PassengerMemoryStats < Scout::Plugin
       elsif table and headers and line =~ /^\d/
         fields = Hash[*headers.zip(line.strip.unpack(field_format)).flatten]
         stats["#{table}_vmsize_total"] += as_mb(fields["vmsize"])
-        stats["#{table}_private_total"] += as_mb(fields["private"])
+        stats["#{table}_private_total"] += as_mb(fields["private"]) + as_mb(fields["resident"])
+
+        app_list.each do |name|
+          if fields["name"] =~ /#{name}/ and fields["name"] =~ /Rails:/
+            stats["rails_#{name}_total"] += as_mb(fields["private"]) + as_mb(fields["resident"])
+          elsif fields["name"] =~ /#{name}/ and fields["name"] =~ /ApplicationSpawner/
+            stats["spawner_#{name}_total"] += as_mb(fields["private"]) + as_mb(fields["resident"])
+          end
+        end
       end
     end
 
     stats.each_key do |field|
-      if field =~ /(?:vmsize|private)_total\z/
+      if field =~ /_total\z/
         stats[field] = "#{stats[field]} MB"
       end
     end

@@ -27,3 +27,7 @@ options:
     name: Max Passenger Private Memory (MB)
     notes: If Passenger's private memory is larger than this amount, an alert is generated.  Use 0 to disable this check.
     default: 0
+  apps_to_track:
+    name: Passenger Apps to Track
+    notes: A comma-seperated list of apps that should be independently tracked.  App names are used in a regex to match passenger command name.
+    default:
