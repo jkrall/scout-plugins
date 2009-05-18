@@ -30,4 +30,3 @@ options:
   apps_to_track:
     name: Passenger Apps to Track
     notes: A comma-seperated list of apps that should be independently tracked.  App names are used in a regex to match passenger command name.
-    default:
